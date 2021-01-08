@@ -5,7 +5,7 @@ __author__  = "David Olano"
 import FSM  
 import datetime
 import resultsDisplay
-import ConfigParser 
+import configparser
 import collections
 
 alarmCodeList = {
@@ -25,7 +25,7 @@ alarmCodeList = {
     14: "ColdResetFunctionAttack",
     }
 
-config=ConfigParser.ConfigParser()
+config=configparser.ConfigParser(inline_comment_prefixes=';')
 config.read("config.ini")  
 
 def initialize():
@@ -34,8 +34,8 @@ def initialize():
 
     initial_state = 1
 
-    print '\tDetected\tSeverity\tTime'
-    print '\t--------\t--------\t----'
+    print('\tDetected\tSeverity\tTime')
+    print('\t--------\t--------\t----')
     
     current_state = "Low"
     previousTotalThreatValue = 0
@@ -65,7 +65,7 @@ def threatPonderate(alarmValue,queue,attackType):
         severity = "Normal"
 
     if alarmValue == 1:
-        print 'ALERT:\t', alarmCodeList[attackType] , '\t', severity , '\t', datetime.datetime.now()
+        print('ALERT:\t', alarmCodeList[attackType] , '\t', severity , '\t', datetime.datetime.now())
 
     queue.extend([alarmValue])
     #print queue # Debug

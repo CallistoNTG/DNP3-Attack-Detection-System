@@ -14,5 +14,3 @@ def remove_network_mask(ip):
     host_ip = ip_inversa[0:ip_inversa.find('.')]
     host_ip = host_ip[::-1]
     return host_ip
-
-    

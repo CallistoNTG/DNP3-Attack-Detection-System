@@ -25,19 +25,14 @@
 
 import unittest
 
+from array import array
 import binascii
 
-from crcmod import mkCrcFun, Crc
-try:
-    from crcmod.crcmod import _usingExtension
-    from crcmod.predefined import PredefinedCrc
-    from crcmod.predefined import mkPredefinedCrcFun
-    from crcmod.predefined import _crc_definitions as _predefined_crc_definitions
-except ImportError:
-    from crcmod import _usingExtension
-    from predefined import PredefinedCrc
-    from predefined import mkPredefinedCrcFun
-    from predefined import _crc_definitions as _predefined_crc_definitions
+from .crcmod import mkCrcFun, Crc
+from .crcmod import _usingExtension
+from .predefined import PredefinedCrc
+from .predefined import mkPredefinedCrcFun
+from .predefined import _crc_definitions as _predefined_crc_definitions
 
 
 #-----------------------------------------------------------------------------
@@ -66,9 +61,9 @@ g32 = 0x104C11DB7
 # polynomial from a list of the bits that need to be turned on.
 
 def polyFromBits(bits):
-    p = 0L
+    p = 0
     for n in bits:
-        p = p | (1L << n)
+        p = p | (1 << n)
     return p
 
 # The following is from the paper "An Improved 64-bit Cyclic Redundancy Check
@@ -92,11 +87,11 @@ g64b = polyFromBits([64, 62, 57, 55, 54, 53, 52, 47, 46, 45, 40, 39, 38, 37,
 class poly:
     '''Class implementing polynomials over the field of integers mod 2'''
     def __init__(self,p):
-        p = long(p)
+        p = int(p)
         if p < 0: raise ValueError('invalid polynomial')
         self.p = p
 
-    def __long__(self):
+    def __int__(self):
         return self.p
 
     def __eq__(self,other):
@@ -110,15 +105,15 @@ class poly:
     def __cmp__(self,other):
         return cmp(self.p, other.p)
 
-    def __nonzero__(self):
-        return self.p != 0L
+    def __bool__(self):
+        return self.p != 0
 
     def __neg__(self):
         return self # These polynomials are their own inverse under addition
 
     def __invert__(self):
         n = max(self.deg() + 1, 1)
-        x = (1L << n) - 1
+        x = (1 << n) - 1
         return poly(self.p ^ x)
 
     def __add__(self,other):
@@ -131,7 +126,7 @@ class poly:
         a = self.p
         b = other.p
         if a == 0 or b == 0: return poly(0)
-        x = 0L
+        x = 0
         while b:
             if b&1:
                 x = x ^ a
@@ -148,20 +143,20 @@ class poly:
         if n == 0: return (self,poly(0))
         if m < n: return (poly(0),self)
         k = m-n
-        a = 1L << m
+        a = 1 << m
         v = v << k
-        q = 0L
+        q = 0
         while k > 0:
             if a & u:
                 u = u ^ v
-                q = q | 1L
+                q = q | 1
             q = q << 1
             a = a >> 1
             v = v >> 1
             k -= 1
         if a & u:
             u = u ^ v
-            q = q | 1L
+            q = q | 1
         return (poly(q),poly(u))
 
     def __div__(self,other):
@@ -191,7 +186,7 @@ class poly:
         a = self.p
         if a == 0: return -1
         n = 0
-        while a >= 0x10000L:
+        while a >= 0x10000:
             n += 16
             a = a >> 16
         a = int(a)
@@ -206,69 +201,63 @@ class poly:
 # algorithms.
 
 g8p = poly(g8)
-x8p = poly(1L<<8)
+x8p = poly(1<<8)
 def crc8p(d):
-    d = map(ord, d)
-    p = 0L
+    p = 0
     for i in d:
-        p = p*256L + i
+        p = p*256 + i
     p = poly(p)
-    return long(p*x8p%g8p)
+    return int(p*x8p%g8p)
 
 g16p = poly(g16)
-x16p = poly(1L<<16)
+x16p = poly(1<<16)
 def crc16p(d):
-    d = map(ord, d)
-    p = 0L
+    p = 0
     for i in d:
-        p = p*256L + i
+        p = p*256 + i
     p = poly(p)
-    return long(p*x16p%g16p)
+    return int(p*x16p%g16p)
 
 g24p = poly(g24)
-x24p = poly(1L<<24)
+x24p = poly(1<<24)
 def crc24p(d):
-    d = map(ord, d)
-    p = 0L
+    p = 0
     for i in d:
-        p = p*256L + i
+        p = p*256 + i
     p = poly(p)
-    return long(p*x24p%g24p)
+    return int(p*x24p%g24p)
 
 g32p = poly(g32)
-x32p = poly(1L<<32)
+x32p = poly(1<<32)
 def crc32p(d):
-    d = map(ord, d)
-    p = 0L
+    p = 0
     for i in d:
-        p = p*256L + i
+        p = p*256 + i
     p = poly(p)
-    return long(p*x32p%g32p)
+    return int(p*x32p%g32p)
 
 g64ap = poly(g64a)
-x64p = poly(1L<<64)
+x64p = poly(1<<64)
 def crc64ap(d):
-    d = map(ord, d)
-    p = 0L
+    p = 0
     for i in d:
-        p = p*256L + i
+        p = p*256 + i
     p = poly(p)
-    return long(p*x64p%g64ap)
+    return int(p*x64p%g64ap)
 
 g64bp = poly(g64b)
 def crc64bp(d):
-    d = map(ord, d)
-    p = 0L
+    p = 0
     for i in d:
-        p = p*256L + i
+        p = p*256 + i
     p = poly(p)
-    return long(p*x64p%g64bp)
+    return int(p*x64p%g64bp)
 
 
 class KnownAnswerTests(unittest.TestCase):
     test_messages = [
-        'T',
-        'CatMouse987654321',
+        b'T',
+        b'CatMouse987654321',
     ]
 
     known_answers = [
@@ -282,15 +271,15 @@ class KnownAnswerTests(unittest.TestCase):
         [ (g24,-1,1),           (0x59BD0E,      0x0AAA37)       ],
         [ (g24,0,1),            (0xD52B0F,      0x1523AB)       ],
         [ (g32,0,0),            (0x6B93DDDB,    0x12DCA0F4)     ],
-        [ (g32,0xFFFFFFFFL,1),  (0x41FB859FL,   0xF7B400A7L)    ],
-        [ (g32,0,1),            (0x6C0695EDL,   0xC1A40EE5L)    ],
-        [ (g32,0,1,0xFFFFFFFF), (0xBE047A60L,   0x084BFF58L)    ],
+        [ (g32,0xFFFFFFFF,1),   (0x41FB859F,    0xF7B400A7)     ],
+        [ (g32,0,1),            (0x6C0695ED,    0xC1A40EE5)     ],
+        [ (g32,0,1,0xFFFFFFFF), (0xBE047A60,    0x084BFF58)     ],
     ]
 
     def test_known_answers(self):
         for crcfun_params, v in self.known_answers:
             crcfun = mkCrcFun(*crcfun_params)
-            self.assertEqual(crcfun('',0), 0, "Wrong answer for CRC parameters %s, input ''" % (crcfun_params,))
+            self.assertEqual(crcfun(b'',0), 0, "Wrong answer for CRC parameters %s, input ''" % (crcfun_params,))
             for i, msg in enumerate(self.test_messages):
                 self.assertEqual(crcfun(msg), v[i], "Wrong answer for CRC parameters %s, input '%s'" % (crcfun_params,msg))
                 self.assertEqual(crcfun(msg[4:], crcfun(msg[:4])), v[i], "Wrong answer for CRC parameters %s, input '%s'" % (crcfun_params,msg))
@@ -299,10 +288,10 @@ class KnownAnswerTests(unittest.TestCase):
 
 class CompareReferenceCrcTest(unittest.TestCase):
     test_messages = [
-        '',
-        'T',
-        '123456789',
-        'CatMouse987654321',
+        b'',
+        b'T',
+        b'123456789',
+        b'CatMouse987654321',
     ]
 
     test_poly_crcs = [
@@ -319,11 +308,11 @@ class CompareReferenceCrcTest(unittest.TestCase):
         """This function modifies the return value of binascii.crc32
         to be an unsigned 32-bit value. I.e. in the range 0 to 2**32-1."""
         # Work around the future warning on constants.
-        if crc > 0x7FFFFFFFL:
-            x = int(crc & 0x7FFFFFFFL)
+        if crc > 0x7FFFFFFF:
+            x = int(crc & 0x7FFFFFFF)
             crc = x | -2147483648
         x = binascii.crc32(d,crc)
-        return long(x) & 0xFFFFFFFFL
+        return int(x) & 0xFFFFFFFF
 
     def test_compare_crc32(self):
         """The binascii module has a 32-bit CRC function that is used in a wide range
@@ -352,7 +341,7 @@ class CompareReferenceCrcTest(unittest.TestCase):
 class CrcClassTest(unittest.TestCase):
     """Verify the Crc class"""
 
-    msg = 'CatMouse987654321'
+    msg = b'CatMouse987654321'
 
     def test_simple_crc32_class(self):
         """Verify the CRC class when not using xorOut"""
@@ -365,12 +354,12 @@ initCrc  = 0xFFFFFFFF
 xorOut   = 0x00000000
 crcValue = 0xFFFFFFFF'''
         self.assertEqual(str(crc), str_rep)
-        self.assertEqual(crc.digest(), '\xff\xff\xff\xff')
+        self.assertEqual(crc.digest(), b'\xff\xff\xff\xff')
         self.assertEqual(crc.hexdigest(), 'FFFFFFFF')
 
         crc.update(self.msg)
-        self.assertEqual(crc.crcValue, 0xF7B400A7L)
-        self.assertEqual(crc.digest(), '\xf7\xb4\x00\xa7')
+        self.assertEqual(crc.crcValue, 0xF7B400A7)
+        self.assertEqual(crc.digest(), b'\xf7\xb4\x00\xa7')
         self.assertEqual(crc.hexdigest(), 'F7B400A7')
 
         # Verify the .copy() method
@@ -388,7 +377,7 @@ crcValue = 0xF7B400A7'''
     def test_full_crc32_class(self):
         """Verify the CRC class when using xorOut"""
 
-        crc = Crc(g32, initCrc=0, xorOut= ~0L)
+        crc = Crc(g32, initCrc=0, xorOut= ~0)
 
         str_rep = \
 '''poly = 0x104C11DB7
@@ -397,12 +386,12 @@ initCrc  = 0x00000000
 xorOut   = 0xFFFFFFFF
 crcValue = 0x00000000'''
         self.assertEqual(str(crc), str_rep)
-        self.assertEqual(crc.digest(), '\x00\x00\x00\x00')
+        self.assertEqual(crc.digest(), b'\x00\x00\x00\x00')
         self.assertEqual(crc.hexdigest(), '00000000')
 
         crc.update(self.msg)
-        self.assertEqual(crc.crcValue, 0x84BFF58L)
-        self.assertEqual(crc.digest(), '\x08\x4b\xff\x58')
+        self.assertEqual(crc.crcValue, 0x84BFF58)
+        self.assertEqual(crc.digest(), b'\x08\x4b\xff\x58')
         self.assertEqual(crc.hexdigest(), '084BFF58')
 
         # Verify the .copy() method
@@ -434,9 +423,9 @@ class PredefinedCrcTest(unittest.TestCase):
     """Verify the predefined CRCs"""
 
     test_messages_for_known_answers = [
-        '',                            # Test cases below depend on this first entry being the empty string. 
-        'T',
-        'CatMouse987654321',
+        b'',                           # Test cases below depend on this first entry being the empty string. 
+        b'T',
+        b'CatMouse987654321',
     ]
 
     known_answers = [
@@ -448,7 +437,7 @@ class PredefinedCrcTest(unittest.TestCase):
     def test_known_answers(self):
         for crcfun_name, v in self.known_answers:
             crcfun = mkPredefinedCrcFun(crcfun_name)
-            self.assertEqual(crcfun('',0), 0, "Wrong answer for CRC '%s', input ''" % crcfun_name)
+            self.assertEqual(crcfun(b'',0), 0, "Wrong answer for CRC '%s', input ''" % crcfun_name)
             for i, msg in enumerate(self.test_messages_for_known_answers):
                 self.assertEqual(crcfun(msg), v[i], "Wrong answer for CRC %s, input '%s'" % (crcfun_name,msg))
                 self.assertEqual(crcfun(msg[4:], crcfun(msg[:4])), v[i], "Wrong answer for CRC %s, input '%s'" % (crcfun_name,msg))
@@ -479,20 +468,71 @@ class PredefinedCrcTest(unittest.TestCase):
         for table_entry in _predefined_crc_definitions:
             # Check predefined function
             crc_func = mkPredefinedCrcFun(table_entry['name'])
-            calc_value = crc_func("123456789")
+            calc_value = crc_func(b"123456789")
             self.assertEqual(calc_value, table_entry['check'], "Wrong answer for CRC '%s'" % table_entry['name'])
 
     def test_class_predefined_table(self):
         for table_entry in _predefined_crc_definitions:
             # Check predefined class
             crc1 = PredefinedCrc(table_entry['name'])
-            crc1.update("123456789")
+            crc1.update(b"123456789")
             self.assertEqual(crc1.crcValue, table_entry['check'], "Wrong answer for CRC '%s'" % table_entry['name'])
 
 
+class InputTypesTest(unittest.TestCase):
+    """Check the various input types that CRC functions can accept."""
+
+    msg = b'CatMouse987654321'
+
+    check_crc_names = [
+        'crc-aug-ccitt',
+        'x-25',
+        'crc-32',
+    ]
+    
+    array_check_types = [
+        'B',
+        'H',
+        'I',
+        'L',
+    ]
+
+    def test_bytearray_input(self):
+        """Test that bytearray inputs are accepted, as an example
+        of a type that implements the buffer protocol."""
+        for crc_name in self.check_crc_names:
+            crcfun = mkPredefinedCrcFun(crc_name)
+            for i in range(len(self.msg) + 1):
+                test_msg = self.msg[:i]
+                bytes_answer = crcfun(test_msg)
+                bytearray_answer = crcfun(bytearray(test_msg))
+                self.assertEqual(bytes_answer, bytearray_answer)
+
+    def test_array_input(self):
+        """Test that array inputs are accepted, as an example
+        of a type that implements the buffer protocol."""
+        for crc_name in self.check_crc_names:
+            crcfun = mkPredefinedCrcFun(crc_name)
+            for i in range(len(self.msg) + 1):
+                test_msg = self.msg[:i]
+                bytes_answer = crcfun(test_msg)
+                for array_type in self.array_check_types:
+                    if i % array(array_type).itemsize == 0:
+                        test_array = array(array_type, test_msg)
+                        array_answer = crcfun(test_array)
+                        self.assertEqual(bytes_answer, array_answer)
+
+    def test_unicode_input(self):
+        """Test that Unicode input raises TypeError"""
+        for crc_name in self.check_crc_names:
+            crcfun = mkPredefinedCrcFun(crc_name)
+            with self.assertRaises(TypeError):
+                crcfun("123456789")
+
+
 def runtests():
-    print "Using extension:", _usingExtension
-    print
+    print("Using extension:", _usingExtension)
+    print()
     unittest.main()
 
 

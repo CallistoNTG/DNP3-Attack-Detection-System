@@ -1,5 +1,7 @@
 __author__ = 'Nicholas Rodofile'
 from scapy.all import *
+from scapy.layers.inet import TCP, UDP
+
 import crcmod.predefined
 
 '''
@@ -172,7 +174,7 @@ class DNP3ApplicationResponse(DNP3Application):
 
     def mysummary(self):
         if isinstance(self.underlayer.underlayer, DNP3):
-            print self.FUNC_CODE.SEQ, "Hello"
+            print(self.FUNC_CODE.SEQ, "Hello")
             return self.underlayer.underlayer.sprintf(DNP3_summary + Transport_summary + Application_Rsp_summary)
         if isinstance(self.underlayer, DNP3Transport):
             return self.underlayer.sprintf(Transport_summary + Application_Rsp_summary)
@@ -277,8 +279,8 @@ class DNP3(Packet):
 
     def show_data_chunks(self):
         for i in range(len(self.data_chunks)):
-            print "\tData Chunk", i, "Len", len(self.data_chunks[i]),\
-                "CRC (", hex(struct.unpack('<H', self.data_chunks_crc[i])[0]), ")"
+            print("\tData Chunk", i, "Len", len(self.data_chunks[i]),
+                  "CRC (", hex(struct.unpack('<H', self.data_chunks_crc[i])[0]), ")")
 
 
     def add_data_chunk(self, chunk):
